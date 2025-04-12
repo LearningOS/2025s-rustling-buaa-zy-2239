@@ -2,7 +2,6 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -38,6 +37,12 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.count += 1;
+        if self.count >= self.items.len() {
+            self.items.push(T::default());
+        }
+        self.items[self.count] = value;
+        self.bubble_up(self.count);
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -58,7 +63,34 @@ where
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
         //TODO
-		0
+        let left_child = self.left_child_idx(idx);
+        let right_child = self.right_child_idx(idx);
+        if right_child <= self.count && (self.comparator)(&self.items[right_child], &self.items[left_child]) {
+            right_child
+        } else {
+            left_child
+        }
+    }
+    fn bubble_up(&mut self, idx: usize) {
+        let mut current = idx;
+        
+        while current > 1 && (self.comparator)(&self.items[current], &self.items[self.parent_idx(current)]) {
+            let parent=self.parent_idx(current);
+            self.items.swap(current, parent);
+            current = self.parent_idx(current);
+        }
+    }
+    fn bubble_down(&mut self, idx: usize) {
+        let mut current = idx;
+        while self.children_present(current) {
+            let smallest_child = self.smallest_child_idx(current);
+            if (self.comparator)(&self.items[smallest_child], &self.items[current]) {
+                self.items.swap(current, smallest_child);
+                current = smallest_child;
+            } else {
+                break;
+            }
+        }
     }
 }
 
@@ -79,13 +111,19 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default+Clone,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.is_empty() {
+            return None;
+        }
+        let root = self.items[1].clone();
+        self.items[1] = self.items[self.count].clone();
+        self.count -= 1;
+        self.bubble_down(1);
+        Some(root)
     }
 }
 

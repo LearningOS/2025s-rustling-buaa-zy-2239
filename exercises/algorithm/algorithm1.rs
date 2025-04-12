@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -29,13 +28,13 @@ struct LinkedList<T> {
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T: PartialOrd> Default for LinkedList<T> {
+impl<T: PartialOrd+Clone> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: PartialOrd> LinkedList<T> {
+impl<T: PartialOrd+Clone> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -70,9 +69,35 @@ impl<T: PartialOrd> LinkedList<T> {
         }
     }
     pub fn merge(list_a: LinkedList<T>, list_b: LinkedList<T>) -> Self {
-        Self{
+        let mut merged_list = LinkedList::new();
+        let mut a_current = list_a.start;
+        let mut b_current = list_b.start;
 
+        while a_current.is_some() || b_current.is_some() {
+            match (a_current, b_current) {
+                (Some(a_ptr), Some(b_ptr)) => {
+                    let a_val = unsafe { &(*a_ptr.as_ptr()).val };
+                    let b_val = unsafe { &(*b_ptr.as_ptr()).val };
+                    if a_val <= b_val {
+                        merged_list.add(unsafe { (*a_ptr.as_ptr()).val.clone() });
+                        a_current = unsafe { (*a_ptr.as_ptr()).next };
+                    } else {
+                        merged_list.add(unsafe { (*b_ptr.as_ptr()).val.clone() });
+                        b_current = unsafe { (*b_ptr.as_ptr()).next };
+                    }
+                }
+                (Some(a_ptr), None) => {
+                    merged_list.add(unsafe { (*a_ptr.as_ptr()).val.clone() });
+                    a_current = unsafe { (*a_ptr.as_ptr()).next };
+                }
+                (None, Some(b_ptr)) => {
+                    merged_list.add(unsafe { (*b_ptr.as_ptr()).val.clone() });
+                    b_current = unsafe { (*b_ptr.as_ptr()).next };
+                }
+                (None, None) => break,
+            }
         }
+        merged_list
     }
 }
 
